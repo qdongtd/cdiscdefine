@@ -137,3 +137,44 @@ SAS functions, placeholders, `[r_*]` markers, unbalanced quotes); copy text not
 Predecessor.
 
 More detail and rationale: [references/adam-rules.md](adam-rules.md).
+
+## A fresh P21 export after the define was filled
+
+When the user re-exports from P21 (new data cut or new datasets), the export comes
+back with empty Methods/Comments and P21's guessed origins everywhere. Check for this
+first (Methods/Comments tabs empty) and ask before filling. The usual answer is
+**carry forward + refill**:
+
+1. Back up the export (`_p21export_<date>_backup.xlsx`) - it is the new skeleton.
+2. For every Variables / ValueLevel row that exists in the last filled define, copy
+   Origin, Source, Pages, Method, Predecessor, Comment (and the Method/Comment texts)
+   from it - this keeps the user's manual fixes and earlier P21-triage decisions.
+3. Copy Data Type / Length / Significant Digits only where the export is blank
+   (no-data variables); otherwise keep the export's values - they reflect the new data
+   (e.g. AVAL length/significant digits can change between data cuts).
+4. Rows that are new since the last define: fill from the spec (run the fill on the
+   export and take those rows), and list each one in the issue workbook.
+5. Re-apply earlier define decisions the export undoes (e.g. user-defined codelists
+   removed after P21 SD1228 come back), carry Datasets metadata, Standards, codelist
+   Terminology/Names, then de-duplicate codelist Names again - new datasets often bring
+   codelists whose names collide with existing ones (DD0131).
+6. Verify: carried rows equal the last define on every origin field; only data
+   attributes may differ.
+
+## Datasets specified outside the compound spec
+
+Some datasets come with their own requirements workbook (e.g. an NCA vendor's
+ADNCA/ADPP specs: Variable Name, Type, Origin, Source/Derivation, Comment). Use it as
+the spec for those datasets:
+- Predecessor: `Source/Derivation` when it is `DATASET.VARIABLE`; a bare variable
+  name is a copy within the same dataset (`ADNCA.AVISIT`, flag it); two sources
+  (`PC.VISIT, EX.VISIT`) are kept verbatim and flagged - confirm or make Derived.
+- Derived / Assigned: Method / Comment text = Source/Derivation and the Comment
+  column verbatim, on separate lines (ask the user if they prefer another form).
+- Value level (AVAL per PARAMCD): the parent variable's requirements row.
+- Variables in the data but not in the requirements (typically ADSL variables): keep
+  P21's Predecessor and report them once.
+- Blank data types: same variable elsewhere in the define; else the requirements
+  `Type` (Char -> text) with Length left blank and flagged.
+- Dataset Class/Structure/Key Variables are usually not in such workbooks - keep
+  P21's (comma-separated keys) and flag for confirmation.
