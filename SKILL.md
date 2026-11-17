@@ -91,6 +91,11 @@ with no VLM column.
   (it will not re-open). Always re-open after saving; if it fails, restore the backup
   and apply the edits through Excel (`cscript //nologo` VBScript: `Workbooks.Open`,
   `Cells(r,c).Value`, `Rows(r).Delete` bottom-up, `Save`), then diff before/after.
+- **Padded sheets:** Excel-saved defines are often formatted down to row 1,048,576,
+  and a full openpyxl load then hangs. For read-only work (QC, reviews) use
+  `common.load_values()` (streams content rows; falls back to a full load for P21
+  exports, which read empty in read-only mode). `self_qc.py` uses it and reports the
+  oversized sheets; tell the user to delete the empty rows before P21.
 - **Self-QC is a pre-filter.** Always still generate define.xml and run the P21
   Define validation; triage P21 findings as define metadata / data (programmer punch
   list) / keys (spec owner) / package (files in the zip).

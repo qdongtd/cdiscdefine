@@ -11,7 +11,10 @@ import openpyxl
 warnings.simplefilter('ignore')
 
 F = sys.argv[1]
-wb = openpyxl.load_workbook(F)
+import os as _os, sys as _sys
+_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+from common import load_values, oversized
+wb, _SIZES = load_values(F)   # values only; tolerant of sheets formatted to the last Excel row
 def tab(name):
     ws = wb[name]; h = [c.value for c in ws[1]]
     return {n: i for i, n in enumerate(h)}, [r for r in ws.iter_rows(min_row=2, values_only=True) if any(r)]
@@ -19,6 +22,7 @@ def txt(x):
     s = '' if x is None else str(x).strip(); return '' if s == 'None' else s
 res, ex = {}, {}
 def chk(rule, viols): res[rule] = len(viols); ex[rule] = list(viols)[:4]
+chk('Sheet used range far beyond content (empty formatted rows)', ['%s: %d rows used, %d with content' % (n, s[1], s[0]) for n, s in oversized(_SIZES).items()])
 
 di, dr = tab('Datasets'); vi, vr = tab('Variables'); li, lr = tab('ValueLevel')
 mi, mr = tab('Methods'); ci_, cr = tab('Comments'); cli, clr = tab('Codelists')

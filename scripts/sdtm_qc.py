@@ -42,7 +42,10 @@ def opt(name):
     return None
 ACRF, PKG = opt('--acrf'), opt('--package')
 F = ARGS[0] if ARGS else 'define.xlsx'
-wb = openpyxl.load_workbook(F)
+import os as _os, sys as _sys
+_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+from common import load_values, oversized
+wb, _SIZES = load_values(F)   # values only; tolerant of sheets formatted to the last Excel row
 def hdr(ws): return {n: i for i, n in enumerate([c.value for c in ws[1]])}
 V, D, VL, CL = wb['Variables'], wb['Datasets'], wb['ValueLevel'], wb['Codelists']
 M, C = wb['Methods'], wb['Comments']
@@ -57,6 +60,7 @@ NUM = {'integer','float','text'}
 res, ex = {}, defaultdict(list)
 def chk(rule, viols):
     res[rule] = len(viols); ex[rule] = list(viols)[:4]
+chk('Sheet used range far beyond content (empty formatted rows)', ['%s: %d rows used, %d with content' % (n, s[1], s[0]) for n, s in oversized(_SIZES).items()])
 def is_int(x):
     try: int(str(x).strip()); return True
     except Exception: return False

@@ -13,7 +13,7 @@ import os, sys, runpy, warnings
 import openpyxl
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-from common import detect_standard
+from common import detect_standard, load_values
 warnings.simplefilter('ignore')
 
 argv = sys.argv[1:]
@@ -22,7 +22,7 @@ if '--standard' in argv:
     i = argv.index('--standard'); std = argv[i + 1].lower(); del argv[i:i + 2]
 book = next((a for a in argv if a.lower().endswith(('.xlsx', '.xlsm'))), None)
 if not book: sys.exit('self_qc.py: give the define workbook (.xlsx)')
-if std is None: std = detect_standard(openpyxl.load_workbook(book))
+if std is None: std = detect_standard(load_values(book)[0])
 engine = os.path.join(HERE, 'sdtm_qc.py' if std == 'sdtm' else 'adam_qc.py')
 sys.argv = [engine] + argv
 runpy.run_path(engine, run_name='__main__')
