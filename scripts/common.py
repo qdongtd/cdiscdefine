@@ -41,6 +41,36 @@ def load_values(path, blank_stop=2000):
     return out, sizes
 
 
+def strip_padding(src, dst):
+    """Remove empty styled rows below the last row with a value, in every worksheet,
+    by editing the sheet XML (seconds; keeps every real row and its formatting).
+
+    The usual cause of a define that "has a million rows" is ONE stray formatted
+    empty row near the bottom plus a <dimension> tag pointing at it; Excel itself is
+    very slow to delete it. Returns {sheet xml: removed row numbers}."""
+    import zipfile, shutil, os
+    zin = zipfile.ZipFile(src); tmp = dst + '.tmp'; removed = {}
+    zout = zipfile.ZipFile(tmp, 'w', zipfile.ZIP_DEFLATED)
+    row_re = re.compile(r'<row [^>]*?(?:/>|>.*?</row>)', re.S)
+    for it in zin.infolist():
+        data = zin.read(it.filename)
+        if it.filename.startswith('xl/worksheets/sheet') and it.filename.endswith('.xml'):
+            x = data.decode('utf8')
+            rows = row_re.findall(x)
+            num = lambda s: int(re.search(r'\br="(\d+)"', s).group(1))
+            filled = [num(s) for s in rows if '<v>' in s or '<is>' in s]
+            last = max(filled) if filled else 1
+            gone = [num(s) for s in rows if num(s) > last and '<v>' not in s and '<is>' not in s]
+            if gone:
+                x = row_re.sub(lambda m: '' if num(m.group(0)) in gone else m.group(0), x)
+                x = re.sub(r'<dimension ref="([A-Z]+\d+):([A-Z]+)\d+"/>',
+                           lambda m: '<dimension ref="%s:%s%d"/>' % (m.group(1), m.group(2), last), x)
+                removed[it.filename] = gone; data = x.encode('utf8')
+        zout.writestr(it, data)
+    zout.close(); zin.close(); shutil.move(tmp, dst)
+    return removed
+
+
 def oversized(sizes, factor=10, floor=5000):
     """Sheets whose used range is far beyond their content (formatted empty rows)."""
     return {n: s for n, s in sizes.items() if s[1] > max(floor, factor * max(s[0], 1))}

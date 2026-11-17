@@ -95,7 +95,7 @@ with no VLM column.
   and a full openpyxl load then hangs. For read-only work (QC, reviews) use
   `common.load_values()` (streams content rows; falls back to a full load for P21
   exports, which read empty in read-only mode). `self_qc.py` uses it and reports the
-  oversized sheets; tell the user to delete the empty rows before P21.
+  oversized sheets. To fix the file, use `common.strip_padding(src, dst)`: it removes the stray empty styled row(s) and the `<dimension>` tag pointing at them by editing the sheet XML (seconds, formatting kept). Do NOT ask Excel to delete a million rows - it can run for many minutes.
 - **Self-QC is a pre-filter.** Always still generate define.xml and run the P21
   Define validation; triage P21 findings as define metadata / data (programmer punch
   list) / keys (spec owner) / package (files in the zip).
